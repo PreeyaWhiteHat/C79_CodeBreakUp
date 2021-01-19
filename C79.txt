@@ -1,0 +1,375 @@
+Step 1
+
+Create BookDonateScreen.js and BookRequestScreen.js
+
+--------------------------------
+Step 2
+
+In BookDonateScreen.js ->
+
+import React, { Component } from 'react';
+import { View, StyleSheet, Text, FlatList,TouchableOpacity } from 'react-native';
+
+export default class BookDonateScreen extends Component{
+
+
+ render(){
+    return( 
+ <View>
+        <Text> Book Donate Screen</Text>
+      </View>
+
+	)
+  }
+}
+
+In BookRequestScreen.js ->
+
+import React, { Component } from 'react';
+import { View, StyleSheet, Text, FlatList,TouchableOpacity } from 'react-native';
+
+export default class BookRequestScreen extends Component{
+
+
+ render(){
+    return( 
+ <View>
+        <Text> Book Reuest Screen</Text>
+      </View>
+
+	)
+  }
+}
+
+------------------------------------------
+Step 3
+
+1) In components folder create AppTabNavigator.js file
+
+2) upload images
+
+3)
+import React from 'react';
+import { Image } from 'react-native';
+import { createBottomTabNavigator } from 'react-navigation-tabs';
+import BookDonateScreen from '../screens/BookDonateScreen';
+import BookRequestScreen from '../screens/BookRequestScreen';
+
+
+
+export const AppTabNavigator = createBottomTabNavigator({
+  DonateBooks : {
+    screen: BookDonateScreen,
+    navigationOptions :{
+      tabBarIcon : <Image source={require("../assets/request-list.png")} style={{width:20, height:20}}/>,
+      tabBarLabel : "Donate Books",
+    }
+  },
+  BookRequest: {
+    screen: BookRequestScreen,
+    navigationOptions :{
+      tabBarIcon : <Image source={require("../assets/request-book.png")} style={{width:20, height:20}}/>,
+      tabBarLabel : "Book Request",
+    }
+  }
+});
+
+
+4) Add dependies in package.json 
+
+ "react-navigation-tabs": "^2.8.11",
+    "react-native-reanimated": "~1.13.0",
+    "react-native-screens": "~2.15.0",
+    "react-navigation": "4.1.1",
+    "@react-navigation/native": "^3.6.5"
+
+5) In App.js
+
+import { createAppContainer, createSwitchNavigator,} from 'react-navigation';
+import { createBottomTabNavigator } from 'react-navigation-tabs';
+import { AppTabNavigator } from './components/AppTabNavigator';
+
+export default function App() {
+  return (
+    <AppContainer/>
+  );
+}
+const switchNavigator = createSwitchNavigator({
+  WelcomeScreen:{screen: WelcomeScreen},
+  BottomTab:{screen: AppTabNavigator}
+})
+
+const AppContainer =  createAppContainer(switchNavigator);
+
+
+6) In WelcomeScreen.js
+
+userLogin = (emailId, password)=>{
+   firebase.auth().signInWithEmailAndPassword(emailId, password)
+   .then(()=>{
+     this.props.navigation.navigate('DonateBooks')
+   })
+   .catch((error)=> {
+     var errorCode = error.code;
+     var errorMessage = error.message;
+     return Alert.alert(errorMessage)
+   })
+ }
+-------------------------------------------------
+Step 4
+
+1) Create MyHeader.js file in components folder
+  
+import React, { Component} from 'react';
+import { Header,Icon,Badge } from 'react-native-elements';
+import { View, Text, StyleSheet ,Alert} from 'react-native';
+
+const MyHeader = props => {
+  return (
+    <Header
+      centerComponent={{ text: props.title, style: { color: '#90A5A9', fontSize:20,fontWeight:"bold", } }}
+      backgroundColor = "#eaf8fe"
+    />
+  );
+};
+
+export default MyHeader;
+
+2) Add dependency 
+ "react-native-elements": "~1.2.7"
+-------------------------------------------
+Step 5
+
+In BookRequestScreen.js
+
+import React,{Component} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  KeyboardAvoidingView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert} from 'react-native';
+import db from '../config';
+import firebase from 'firebase';
+import MyHeader from '../components/MyHeader';
+
+export default class BookRequestScreen extends Component{
+  constructor(){
+    super();
+    this.state ={
+      userId : firebase.auth().currentUser.email,
+      bookName:"",
+      reasonToRequest:""
+    }
+  }
+
+  render(){
+    return(
+        <View style={{flex:1}}>
+          <MyHeader title="Request Book"/>
+            <KeyboardAvoidingView style={styles.keyBoardStyle}>
+              <TextInput
+                style ={styles.formTextInput}
+                placeholder={"enter book name"}
+                onChangeText={(text)=>{
+                    this.setState({
+                        bookName:text
+                    })
+                }}
+                value={this.state.bookName}
+              />
+              <TextInput
+                style ={[styles.formTextInput,{height:300}]}
+                multiline
+                numberOfLines ={8}
+                placeholder={"Why do you need the book"}
+                onChangeText ={(text)=>{
+                    this.setState({
+                        reasonToRequest:text
+                    })
+                }}
+                value ={this.state.reasonToRequest}
+              />
+              <TouchableOpacity
+                style={styles.button}
+                onPress={()=>{this.addRequest(this.state.bookName,this.state.reasonToRequest)}}
+                >
+                <Text>Request</Text>
+              </TouchableOpacity>
+            </KeyboardAvoidingView>
+        </View>
+    )
+  }
+}
+
+const styles = StyleSheet.create({
+  keyBoardStyle : {
+    flex:1,
+    alignItems:'center',
+    justifyContent:'center'
+  },
+  formTextInput:{
+    width:"75%",
+    height:35,
+    alignSelf:'center',
+    borderColor:'#ffab91',
+    borderRadius:10,
+    borderWidth:1,
+    marginTop:20,
+    padding:10,
+  },
+  button:{
+    width:"75%",
+    height:50,
+    justifyContent:'center',
+    alignItems:'center',
+    borderRadius:10,
+    backgroundColor:"#ff5722",
+    shadowColor: "#000",
+    shadowOffset: {
+       width: 0,
+       height: 8,
+    },
+    shadowOpacity: 0.44,
+    shadowRadius: 10.32,
+    elevation: 16,
+    marginTop:20
+    },
+  }
+)
+
+----------------------------------------
+Step 6
+
+In BookRequestScreen.js
+
+
+ createUniqueId(){
+    return Math.random().toString(36).substring(7);
+  }
+
+  addRequest =(bookName,reasonToRequest)=>{
+    var userId = this.state.userId
+    var randomRequestId = this.createUniqueId()
+    db.collection('requested_books').add({
+        "user_id": userId,
+        "book_name":bookName,
+        "reason_to_request":reasonToRequest,
+        "request_id"  : randomRequestId,
+    })
+
+    this.setState({
+        bookName :'',
+        reasonToRequest : ''
+    })
+
+    return alert("Book Requested Successfully")
+  }
+-----------------------------------------------------
+Step 7
+
+In BookDonateScreen.js
+  
+import React, { Component } from 'react';
+import { View, StyleSheet, Text, FlatList,TouchableOpacity } from 'react-native';
+import { ListItem } from 'react-native-elements'
+import firebase from 'firebase';
+import db from '../config'
+import MyHeader from '../components/MyHeader';
+
+constructor(){
+    super()
+    this.state = {
+      requestedBooksList : []
+    }
+  this.requestRef= null
+  }
+
+  getRequestedBooksList =()=>{
+    this.requestRef = db.collection("requested_books")
+    .onSnapshot((snapshot)=>{
+      var requestedBooksList = snapshot.docs.map(document => document.data());
+      this.setState({
+        requestedBooksList : requestedBooksList
+      });
+    })
+  }
+
+--------------------------------------------------------
+Step 8
+
+componentDidMount(){
+    this.getRequestedBooksList()
+  }
+
+  componentWillUnmount(){
+    this.requestRef();
+  }
+
+  keyExtractor = (item, index) => index.toString()
+
+  renderItem = ( {item, i} ) =>{
+    return (
+      <ListItem
+        key={i}
+        title={item.book_name}
+        subtitle={item.reason_to_request}
+        titleStyle={{ color: 'black', fontWeight: 'bold' }}
+        rightElement={
+            <TouchableOpacity style={styles.button}>
+              <Text style={{color:'#ffff'}}>View</Text>
+            </TouchableOpacity>
+          }
+        bottomDivider
+      />
+    )
+  }
+
+  render(){
+    return(
+      <View style={{flex:1}}>
+        <MyHeader title="Donate Books"/>
+        <View style={{flex:1}}>
+          {
+            this.state.requestedBooksList.length === 0
+            ?(
+              <View style={styles.subContainer}>
+                <Text style={{ fontSize: 20}}>List Of All Requested Books</Text>
+              </View>
+            )
+            :(
+              <FlatList
+                keyExtractor={this.keyExtractor}
+                data={this.state.requestedBooksList}
+                renderItem={this.renderItem}
+              />
+            )
+          }
+        </View>
+      </View>
+    )
+  }
+}
+
+const styles = StyleSheet.create({
+  subContainer:{
+    flex:1,
+    fontSize: 20,
+    justifyContent:'center',
+    alignItems:'center'
+  },
+  button:{
+    width:100,
+    height:30,
+    justifyContent:'center',
+    alignItems:'center',
+    backgroundColor:"#ff5722",
+    shadowColor: "#000",
+    shadowOffset: {
+       width: 0,
+       height: 8
+     }
+  }
+})
